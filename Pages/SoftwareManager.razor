@@ -1,0 +1,68 @@
+﻿@page "/softwaremanager"
+
+<PageTitle>Software Manager</PageTitle>
+
+@using BlazorApp.Data
+@inject SoftwareService SoftwareService
+
+<h1>Software Manager</h1>
+
+<p>This component demonstrates fetching data from a service.</p>
+<input placeholder="Software Version" @bind="versionString" />
+<button class="btn btn-primary" @onclick="VersionSearchClick">Search</button>
+<div class="alert alert-warning" role="alert">
+  @errorMessage
+</div>
+@if (softwares == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var software in softwares)
+            {
+                <tr>
+                    <td>@software.Name</td>
+                    <td>@software.Version</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Software[]? softwares;
+    private string? versionString;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        softwares = await SoftwareService.GetSoftwareByVersion(null);
+    }
+    
+    private async void VersionSearchClick()
+    {
+        if(versionString.Split('.').Length == 1 && int.TryParse(versionString, out _))
+            versionString += ".0";
+
+        try {
+            var searchVersion = new Version(versionString);
+            
+            softwares = await SoftwareService.GetSoftwareByVersion(searchVersion);
+            
+            errorMessage = null;
+        }
+        catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
